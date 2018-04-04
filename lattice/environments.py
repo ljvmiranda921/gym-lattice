@@ -91,9 +91,11 @@ class Lattice2D(object):
 
         Raises
         ------
-        ValueError
+        AssertionError
             When the specified action is invalid.
         """
+        assert action in ['L', 'R', 'U', 'D'], "Invalid action specified!"
+
         # Obtain the last coordinate in the chain
         x, y = next(reversed(self.chain))
         # Get new coords based on action
