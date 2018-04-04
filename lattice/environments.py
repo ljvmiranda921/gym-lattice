@@ -113,8 +113,8 @@ class Lattice2D(object):
         reward = self._get_reward(self.chain) if done else None
         # Organize info
         info = {
-            'chain length' : len(self.chain),
-            'seq length'   : len(self.seq),
+            'chain_length' : len(self.chain),
+            'seq_length'   : len(self.seq),
             'collisions'   : self.collisions,
             'actions'      : self.actions
         }
