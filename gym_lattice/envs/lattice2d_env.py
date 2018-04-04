@@ -1,16 +1,17 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 """
 Implements the 2D Lattice Environment
 """
-
-# Import modules
+# Import gym modules
+import gym
 import numpy as np
+from gym import error, spaces, utils
+from gym.utils import seeding
 from collections import OrderedDict
 
 
-class Lattice2D(object):
+class Lattice2DEnv(gym.Env):
     """A 2-dimensional lattice environment from Dill and Lau, 1989
     [dill1989lattice]_.
 
@@ -39,6 +40,11 @@ class Lattice2D(object):
     mechanics model of the conformational and se quence spaces of proteins.
     Marcromolecules 22(10), 3986–3997 (1989)
     """
+    metadata = {'render.modes': ['human']}
+
+    # Set these in ALL subclasses
+    action_space = None
+    observation_space = None
 
     def __init__(self, seq):
         """Initializes the lattice
@@ -55,7 +61,7 @@ class Lattice2D(object):
         """
         assert set(seq.upper()) <= set('HP'), "Invalid input sequence!"
         self.seq = seq.upper()
-        self.chain = OrderedDict({(0,0):self.seq[0]})
+        self.chain = OrderedDict({(0,0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
 
