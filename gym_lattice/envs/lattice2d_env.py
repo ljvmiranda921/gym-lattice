@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 """
@@ -43,6 +42,10 @@ class Lattice2DEnv(gym.Env):
     """
     metadata = {'render.modes': ['human']}
 
+    # Set these in ALL subclasses
+    action_space = None
+    observation_space = None
+
     def __init__(self, seq):
         """Initializes the lattice
 
@@ -58,7 +61,7 @@ class Lattice2DEnv(gym.Env):
         """
         assert set(seq.upper()) <= set('HP'), "Invalid input sequence!"
         self.seq = seq.upper()
-        self.chain = OrderedDict({(0,0):self.seq[0]})
+        self.chain = OrderedDict({(0,0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
 
