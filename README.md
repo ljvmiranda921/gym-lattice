@@ -1,4 +1,4 @@
-# Lattice
+# gym-lattice
 
 ![python 3.5+](https://img.shields.io/badge/python-3.5+-blue.svg)
 
@@ -13,22 +13,37 @@ solutions.
 ## Dependencies
 
 - numpy==1.14.2
+- gym==0.10.4
 
-## Sample Usage
+## Installation
+
+First, clone this repository via:
+
+```
+git clone https://github.com/ljvmiranda921/gym-lattice.git
+```
+
+and then install via `pip`:
+
+```
+pip install -e .
+```
+
+## Usage
 
 There are four possible actions in this environment: `L` (left), `R` (right),
 `U` (up), and `D` (down). Let's try this out with a random agent on the
 protein sequence `HHPHH`!
 
 ```python
-from lattice.environments import Lattice2D
+from gym_lattice.envs import Lattice2DEnv
 import numpy as np
 
 np.random.seed(42)
 
 seq = 'HHPHH'
 action_ space = ['L', 'R', 'U', 'D']
-env = Lattice2D(seq)
+env = Lattice2DEnv(seq)
 
 for i_episodes in range(5):
     env.reset()
@@ -37,7 +52,8 @@ for i_episodes in range(5):
         action = np.random.choice(action_space)
         obs, reward, done, info = env.step(action)
         if done:
-            print("Episode finished! Reward: {} | Collisions: {} | Actions: {}".format(reward, info[]))
+            print("Episode finished! Reward: {} | Collisions: {} | Actions: {}".format(reward, info['collisions'], info['actions']))
+            break
 ```
 
 Sample output:
