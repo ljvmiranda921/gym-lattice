@@ -14,7 +14,7 @@ solutions.
 
 - numpy==1.14.2
 
-## Sample Usage
+## Usage
 
 There are four possible actions in this environment: `L` (left), `R` (right),
 `U` (up), and `D` (down). Let's try this out with a random agent on the
@@ -37,7 +37,7 @@ for i_episodes in range(5):
         action = np.random.choice(action_space)
         obs, reward, done, info = env.step(action)
         if done:
-            print("Episode finished! Reward: {} | Collisions: {} | Actions: {}".format(reward, info[]))
+            print("Episode finished! Reward: {} | Collisions: {} | Actions: {}".format(reward, info['collisions']))
 ```
 
 Sample output:
