@@ -15,6 +15,7 @@ solutions.
 - numpy==1.14.2
 - gym==0.10.4
 
+
 ## Installation
 
 First, clone this repository via:
