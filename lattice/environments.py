@@ -103,6 +103,7 @@ class Lattice2D(object):
         if new_coords in self.chain:
             self.collisions += 1
         else:
+            self.actions.append(action)
             self.chain.update({new_coords : self.seq[idx]})
         # Done signal
         done = True if len(self.chain) == len(self.seq) else False
@@ -112,7 +113,8 @@ class Lattice2D(object):
         info = {
             'chain length' : len(self.chain),
             'seq length'   : len(self.seq),
-            'collisions'   : self.collisions
+            'collisions'   : self.collisions,
+            'actions'      : self.actions
         }
 
         return (self.chain, reward, done, info)
@@ -148,3 +150,41 @@ class Lattice2D(object):
         elif action == 'D':
             new_coords = (x, y - 1)
         return new_coords
+
+    def _get_reward(self, chain):
+        """Computes the reward given the lattice's state
+
+        This environment gives you sparse rewards, i.e., the reward is only
+        computed at the end of each episode. This follow the same energy
+        function given by Dill et. al. [dill1989lattice]_
+
+        Recall that the goal is to find the configuration with the lowest
+        energy.
+
+        .. [dill1989lattice] Lau, K.F., Dill, K.A.: A lattice statistical
+        mechanics model of the conformational and se quence spaces of proteins.
+        Marcromolecules 22(10), 3986–3997 (1989)
+
+        Parameters
+        ----------
+        chain : OrderedDict
+            Current chain in the lattice
+
+        Returns
+        -------
+        int
+            Computed reward
+        """
+        h_polymers = [x for x in chain if chain[x] == 'H']
+        h_pairs = [(x, y) for x in h_polymers for y in h_polymers]
+
+        # Compute distance between all hydrophobic pairs
+        h_adjacent = []
+        for pair in h_pairs:
+            dist = np.linalg.norm(np.subtract(pair[0], pair[1]))
+            if dist == 1.0: # adjacent pairs have a unit distance
+                h_adjacent.append(pair)
+
+        # Remove duplicate pairs of pairs
+        reward = - len(h_adjacent) / 2
+        return int(reward)
