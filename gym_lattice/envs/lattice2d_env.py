@@ -29,12 +29,15 @@ class Lattice2DEnv(gym.Env):
     ----------
     seq : str
         Polymer sequence describing a particular protein.
-    chain : OrderedDict
-        Dictionary of polymer coordinates.
+    state : OrderedDict
+        Dictionary of the current polymer chain with coordinates and
+        polymer type (H or P).
     actions : list
         List of actions performed by the model.
     collisions : int
         Number of collisions incurred by the model.
+    trapped : int
+        Number of times the agent was trapped.
 
     .. [dill1989lattice] Lau, K.F., Dill, K.A.: A lattice statistical
     mechanics model of the conformational and se quence spaces of proteins.
@@ -61,7 +64,7 @@ class Lattice2DEnv(gym.Env):
         """
         assert set(seq.upper()) <= set('HP'), "Invalid input sequence!"
         self.seq = seq.upper()
-        self.chain = OrderedDict({(0,0) : self.seq[0]})
+        self.state = OrderedDict({(0,0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
         self.trapped = 0
@@ -104,40 +107,40 @@ class Lattice2DEnv(gym.Env):
         assert action in ['L', 'R', 'U', 'D'], "Invalid action specified!"
         is_trapped = False
         # Obtain coordinate of previous polymer
-        x, y = next(reversed(self.chain))
+        x, y = next(reversed(self.state))
         # Get all adjacant coords and next move based on action
         adj_coords = self._get_adjacent_coords((x,y))
         next_move = adj_coords[action]
         # Detects for collision or traps in the given coordinate
-        idx = len(self.chain)
-        if set(adj_coords.values()).issubset(self.chain):
+        idx = len(self.state)
+        if set(adj_coords.values()).issubset(self.state):
             self.trapped += 1
             is_trapped = True
-        elif next_move in self.chain:
+        elif next_move in self.state:
             self.collisions += 1
         else:
             self.actions.append(action)
-            self.chain.update({next_move : self.seq[idx]})
+            self.state.update({next_move : self.seq[idx]})
         # Done signal
-        done = True if len(self.chain) == len(self.seq) or is_trapped else False
+        done = True if len(self.state) == len(self.seq) or is_trapped else False
 
         # Compute for reward
-        reward = self._get_reward(self.chain) if done else None
+        reward = self._get_reward(self.state) if done else None
 
         # Organize info
         info = {
-            'chain_length' : len(self.chain),
+            'chain_length' : len(self.state),
             'seq_length'   : len(self.seq),
             'collisions'   : self.collisions,
             'actions'      : self.actions,
             'is_trapped'   : is_trapped
         }
 
-        return (self.chain, reward, done, info)
+        return (self.state, reward, done, info)
 
     def reset(self):
         """Resets the environment"""
-        self.chain = OrderedDict({(0,0) : self.seq[0]})
+        self.state = OrderedDict({(0,0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
         self.trapped = 0
