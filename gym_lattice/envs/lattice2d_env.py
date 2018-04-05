@@ -64,6 +64,7 @@ class Lattice2DEnv(gym.Env):
         self.chain = OrderedDict({(0,0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
+        self.trapped = 0
 
     def step(self, action):
         """Updates the current chain with the specified action.
@@ -101,28 +102,35 @@ class Lattice2DEnv(gym.Env):
             When the specified action is invalid.
         """
         assert action in ['L', 'R', 'U', 'D'], "Invalid action specified!"
-
-        # Obtain the last coordinate in the chain
+        is_trapped = False
+        # Obtain coordinate of previous polymer
         x, y = next(reversed(self.chain))
-        # Get new coords based on action
-        new_coords = self._add_poly((x,y), action)
-        # Detects for collision in the given coordinate
+        # Get all adjacant coords and next move based on action
+        adj_coords = self._get_adjacent_coords((x,y))
+        next_move = adj_coords[action]
+        # Detects for collision or traps in the given coordinate
         idx = len(self.chain)
-        if new_coords in self.chain:
+        if set(adj_coords.values()).issubset(self.chain):
+            self.trapped += 1
+            is_trapped = True
+        elif next_move in self.chain:
             self.collisions += 1
         else:
             self.actions.append(action)
-            self.chain.update({new_coords : self.seq[idx]})
+            self.chain.update({next_move : self.seq[idx]})
         # Done signal
-        done = True if len(self.chain) == len(self.seq) else False
+        done = True if len(self.chain) == len(self.seq) or is_trapped else False
+
         # Compute for reward
         reward = self._get_reward(self.chain) if done else None
+
         # Organize info
         info = {
             'chain_length' : len(self.chain),
             'seq_length'   : len(self.seq),
             'collisions'   : self.collisions,
-            'actions'      : self.actions
+            'actions'      : self.actions,
+            'is_trapped'   : is_trapped
         }
 
         return (self.chain, reward, done, info)
@@ -132,32 +140,30 @@ class Lattice2DEnv(gym.Env):
         self.chain = OrderedDict({(0,0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
+        self.trapped = 0
 
-    def _add_poly(self, coords, action):
-        """Obtains the coordinate of the next polymer
-        
+    def _get_adjacent_coords(self, coords):
+        """Obtains all adjacent coordinates of the current position
+
         Parameters
         ----------
-        coords : tuple
-            X-y coordinates of the previous polymer.
-        action : str
-            Action to be done.
+        coords : 2-tuple
+            Coordinates (X-y) of the current position
 
         Returns
         -------
-        tuple
-            Coordinates of the next polymer.
+        dictionary
+            All adjacent coordinates
         """
         x, y = coords
-        if action == 'L':
-            new_coords = (x - 1, y)
-        elif action == 'R':
-            new_coords = (x + 1, y)
-        elif action == 'U':
-            new_coords = (x, y + 1)
-        elif action == 'D':
-            new_coords = (x, y - 1)
-        return new_coords
+        adjacent_coords = {
+            'L' : (x - 1, y),
+            'R' : (x + 1, y),
+            'U' : (x, y + 1),
+            'D' : (x, y - 1)
+        }
+
+        return adjacent_coords
 
     def _get_reward(self, chain):
         """Computes the reward given the lattice's state

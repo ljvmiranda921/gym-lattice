@@ -5,20 +5,20 @@
 An HP 2D Lattice Environment with a Gym-like API for the protein folding
 problem
 
-This is a Python library that implements Lau and Dill's (1989)
-hydrophobic-polar two-dimensional lattice model for protein structures. It
-follows OpenAI Gym's API, easing integration for reinforcement learning
-solutions.
+This is a Python library that formulates Lau and Dill's (1989)
+hydrophobic-polar two-dimensional lattice model as a reinforcement learning
+problem. It follows OpenAI Gym's API, easing integration for reinforcement
+learning solutions. This library only implements a two-dimensional square
+lattice, but different lattice structures will be done in the future.
 
 ## Dependencies
 
 - numpy==1.14.2
 - gym==0.10.4
 
-
 ## Installation
 
-First, clone this repository via:
+First, clone this repository with the following command:
 
 ```
 git clone https://github.com/ljvmiranda921/gym-lattice.git
@@ -32,9 +32,9 @@ pip install -e .
 
 ## Usage
 
-There are four possible actions in this environment: `L` (left), `R` (right),
-`U` (up), and `D` (down). Let's try this out with a random agent on the
-protein sequence `HHPHH`!
+In this environment, there are four possible actions that your agent can
+perform: `L` (left), `R` (right), `U` (up), and `D` (down). Let's try this
+out with a random agent on the protein sequence `HHPHH`!
 
 ```python
 from gym_lattice.envs import Lattice2DEnv
@@ -43,7 +43,7 @@ import numpy as np
 np.random.seed(42)
 
 seq = 'HHPHH'
-action_ space = ['L', 'R', 'U', 'D']
+action_space = ['L', 'R', 'U', 'D']
 env = Lattice2DEnv(seq)
 
 for i_episodes in range(5):
@@ -67,10 +67,10 @@ Episode finished! Reward: -3 | Collisions: 1 | Actions: ['U', 'L', 'D', 'D']
 Episode finished! Reward: -2 | Collisions: 2 | Actions: ['D', 'R', 'R', 'D']
 ```
 
-An episode ends when all polymers are added to the lattice. Whenever a
-collision is detected, the agent should enter another action. We account for
-the number of collisions so you can use them when you customize your own
-reward functions.
+An episode ends when all polymers are added to the lattice OR if the sequence
+of actions "traps" the polymer chain. Whenever a collision is detected, the
+agent should enter another action. We account for the number of collisions so
+you can use them when you customize your own reward functions for learning.
 
 In addition, this environment gives **sparse rewards**, that is, reward is
 only computed at the end of each episode.
