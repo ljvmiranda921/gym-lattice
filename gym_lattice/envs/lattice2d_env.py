@@ -10,6 +10,12 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from collections import OrderedDict
 
+# Human-readable actions
+ACTION_TO_STR = {
+    0 : 'L',
+    1 : 'D',
+    2 : 'U',
+    3 : 'R'}
 
 class Lattice2DEnv(gym.Env):
     """A 2-dimensional lattice environment from Dill and Lau, 1989
@@ -45,10 +51,6 @@ class Lattice2DEnv(gym.Env):
     """
     metadata = {'render.modes': ['human']}
 
-    # Set these in ALL subclasses
-    action_space = None
-    observation_space = None
-
     def __init__(self, seq):
         """Initializes the lattice
 
@@ -69,8 +71,21 @@ class Lattice2DEnv(gym.Env):
         self.collisions = 0
         self.trapped = 0
 
+        self.action_space = spaces.Discrete(4)
+        self.observation_space = spaces.Dict({})
+
     def step(self, action):
         """Updates the current chain with the specified action.
+
+        The action supplied by the agent should be an integer from 0
+        to 3. In this case:
+            - 0 : left
+            - 1 : down
+            - 2 : up
+            - 3 : right
+
+        The best way to remember this is to note that they are similar
+        to the 'h', 'j', 'k', and 'l' keys in vim.
 
         This method returns a set of values similar to the OpenAI gym,
         that is, a tuple :code:`(observations, reward, done, info)`.
@@ -80,13 +95,13 @@ class Lattice2DEnv(gym.Env):
 
         Parameters
         ----------
-        action : str, {'L', 'R', 'U', 'D'}
+        action : int, {0, 1, 2, 3}
             Specifies the position where the next polymer will be placed
             relative to the previous one:
-                - 'L' : left
-                - 'R' : right
-                - 'U' : up
-                - 'D' : down
+                - 0 : left
+                - 1 : down
+                - 2 : up
+                - 3 : right
 
         Returns
         -------
@@ -104,7 +119,8 @@ class Lattice2DEnv(gym.Env):
         AssertionError
             When the specified action is invalid.
         """
-        assert action in ['L', 'R', 'U', 'D'], "Invalid action specified!"
+        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+
         is_trapped = False
         # Obtain coordinate of previous polymer
         x, y = next(reversed(self.state))
@@ -123,16 +139,14 @@ class Lattice2DEnv(gym.Env):
             self.state.update({next_move : self.seq[idx]})
         # Done signal
         done = True if len(self.state) == len(self.seq) or is_trapped else False
-
         # Compute for reward
         reward = self._get_reward(self.state) if done else None
-
         # Organize info
         info = {
             'chain_length' : len(self.state),
             'seq_length'   : len(self.seq),
             'collisions'   : self.collisions,
-            'actions'      : self.actions,
+            'actions'      : [ACTION_TO_STR[i] for i in self.actions],
             'is_trapped'   : is_trapped
         }
 
@@ -160,10 +174,10 @@ class Lattice2DEnv(gym.Env):
         """
         x, y = coords
         adjacent_coords = {
-            'L' : (x - 1, y),
-            'R' : (x + 1, y),
-            'U' : (x, y + 1),
-            'D' : (x, y - 1)
+            0 : (x - 1, y),
+            1 : (x, y - 1),
+            2 : (x, y + 1),
+            3 : (x + 1, y),
         }
 
         return adjacent_coords

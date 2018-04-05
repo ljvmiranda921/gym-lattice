@@ -33,24 +33,28 @@ pip install -e .
 ## Usage
 
 In this environment, there are four possible actions that your agent can
-perform: `L` (left), `R` (right), `U` (up), and `D` (down). Let's try this
-out with a random agent on the protein sequence `HHPHH`!
+perform: `0` (left), `1` (down), `2` (up), and `3` (right). The number
+choices may seem funky at first but just remember that it maps to the
+standard vim keybindings.
+
+Let's try this out with a random agent on the protein sequence `HHPHH`!
 
 ```python
 from gym_lattice.envs import Lattice2DEnv
+from gym import spaces
 import numpy as np
 
 np.random.seed(42)
 
-seq = 'HHPHH'
-action_space = ['L', 'R', 'U', 'D']
+seq = 'HHPHH' # Our input sequence
+action_space = spaces.Discrete(4) # Discrete space from 0 to 3
 env = Lattice2DEnv(seq)
 
 for i_episodes in range(5):
     env.reset()
     while True
         # Sample randomly from action space
-        action = np.random.choice(action_space)
+        action = action_space.sample()
         obs, reward, done, info = env.step(action)
         if done:
             print("Episode finished! Reward: {} | Collisions: {} | Actions: {}".format(reward, info['collisions'], info['actions']))
