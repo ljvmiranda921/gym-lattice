@@ -12,11 +12,19 @@ problem. It follows OpenAI Gym's API, easing integration for reinforcement
 learning solutions. This library only implements a two-dimensional square
 lattice, but different lattice structures will be done in the future.
 
+Screenshots from `render()`:
+
+![](/assets/demo1.png)
+![](/assets/demo2.png)
+![](/assets/demo3.png)
+
 ## Dependencies
 
 - numpy==1.14.2
 - gym==0.10.4
+- six==1.11.0
 - pytest==3.2.1 *(dev)*
+- setuptools==39.0.1 *(dev)*
 
 ## Installation
 
@@ -58,6 +66,7 @@ for i_episodes in range(5):
         # Sample randomly from action space
         action = action_space.sample()
         obs, reward, done, info = env.step(action)
+        env.render()
         if done:
             print("Episode finished! Reward: {} | Collisions: {} | Actions: {}".format(reward, info['collisions'], info['actions']))
             break
@@ -87,6 +96,4 @@ In addition, this environment gives **sparse rewards**, that is, reward is
 only computed at the end of each episode.
 
 ## Task List
-- Add test cases and set-up continuous integration
-- Rendering fuctionality
-- Lattice3D (?) *maybe some time in the future*
+- Lattice3DEnv (?) *maybe some time in the future*
