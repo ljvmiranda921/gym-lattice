@@ -46,12 +46,18 @@ class Lattice2DEnv(gym.Env):
         Number of collisions incurred by the model.
     trapped : int
         Number of times the agent was trapped.
+    grid_length : int
+        Length of one side of the grid.
+    midpoint : tuple
+        Coordinate containing the midpoint of the grid.
+    grid : numpy.ndarray
+        Actual grid containing the polymer chain.
 
     .. [dill1989lattice] Lau, K.F., Dill, K.A.: A lattice statistical
     mechanics model of the conformational and se quence spaces of proteins.
     Marcromolecules 22(10), 3986–3997 (1989)
     """
-    metadata = {'render.modes': ['human']}
+    metadata = {'render.modes': ['human', 'ansi']}
 
     def __init__(self, seq):
         """Initializes the lattice
