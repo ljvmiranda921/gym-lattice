@@ -163,6 +163,7 @@ class Lattice2DEnv(gym.Env):
                 logger.error('All molecules have been placed! Nothing can be added to the protein chain.')
                 raise
 
+
         # Set-up return values
         grid = self._draw_grid(self.state)
         done = True if len(self.state) == len(self.seq) or is_trapped else False
@@ -189,6 +190,7 @@ class Lattice2DEnv(gym.Env):
         self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
 
         return self.grid
+
 
     def _get_adjacent_coords(self, coords):
         """Obtains all adjacent coordinates of the current position
