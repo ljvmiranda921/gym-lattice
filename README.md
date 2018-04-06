@@ -1,6 +1,7 @@
 # gym-lattice
 
-![python 3.5+](https://img.shields.io/badge/python-3.5+-blue.svg)
+[![Build Status](https://travis-ci.org/ljvmiranda921/gym-lattice.svg?branch=master)](https://travis-ci.org/ljvmiranda921/gym-lattice)
+![python 3.4+](https://img.shields.io/badge/python-3.4+-blue.svg)
 
 An HP 2D Lattice Environment with a Gym-like API for the protein folding
 problem
