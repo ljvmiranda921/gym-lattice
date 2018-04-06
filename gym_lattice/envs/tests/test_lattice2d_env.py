@@ -4,16 +4,16 @@
 
 import pytest
 import numpy as np
-import string, random
+import string
 
 def generate_sequence(length):
     """Generates a random sequence given a length"""
-    possible_chars = 'HHpp'
-    return "".join([random.choice(possible_chars) for i in range(length)])
+    possible_chars = 'HhPp'
+    return "".join([np.random.choice(list(possible_chars)) for i in range(length)])
 
 def generate_invalid_sequence():
     """Generates an invalid sequence of length 10"""
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+    return ''.join(np.random.choice(list(string.ascii_uppercase + string.digits), size=10))
 
 def test_init_invalid_sequence():
     """Exception must be raised with invalid input"""
