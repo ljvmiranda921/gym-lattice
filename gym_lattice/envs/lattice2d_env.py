@@ -10,12 +10,14 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from collections import OrderedDict
 
-# Human-readable actions
+# Human-readable
 ACTION_TO_STR = {
-    0 : 'L',
-    1 : 'D',
-    2 : 'U',
-    3 : 'R'}
+    0 : 'L', 1 : 'D',
+    2 : 'U', 3 : 'R'}
+
+POLY_TO_INT = {
+    'H' : 1, 'P' : -1
+}
 
 class Lattice2DEnv(gym.Env):
     """A 2-dimensional lattice environment from Dill and Lau, 1989
@@ -65,14 +67,23 @@ class Lattice2DEnv(gym.Env):
             If a certain polymer is not 'H' or 'P'
         """
         assert set(seq.upper()) <= set('HP'), "Invalid input sequence!"
+
         self.seq = seq.upper()
         self.state = OrderedDict({(0,0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
         self.trapped = 0
-
+        # Grid attributes
+        self.grid_length = 2 * len(seq) + 1
+        self.midpoint = (len(seq), len(seq))
+        self.grid = np.zeros(shape=(self.grid_length, self.grid_length), dtype=int)
+        # Automatically assign first element into grid
+        self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
+        # Define action-observation spaces
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Dict({})
+        self.observation_space = spaces.Box(low=-2, high=1, 
+                                            shape=(self.grid_length, self.grid_length),
+                                            dtype=int)
 
     def step(self, action):
         """Updates the current chain with the specified action.
@@ -83,12 +94,18 @@ class Lattice2DEnv(gym.Env):
             - 1 : down
             - 2 : up
             - 3 : right
+        The best way to remember this is to note that they are similar to the
+        'h', 'j', 'k', and 'l' keys in vim.
 
-        The best way to remember this is to note that they are similar
-        to the 'h', 'j', 'k', and 'l' keys in vim.
+        This method returns a set of values similar to the OpenAI gym, that
+        is, a tuple :code:`(observations, reward, done, info)`.
 
-        This method returns a set of values similar to the OpenAI gym,
-        that is, a tuple :code:`(observations, reward, done, info)`.
+        The observations are arranged as a :code:`numpy.ndarray` matrix, more
+        suitable for agents built using convolutional neural networks. The
+        'H' is represented as :code:`1`s whereas the 'P's as :code:`-1`s.
+        However, for the actual chain, that is, an :code:`OrderedDict` and
+        not its grid-like representation, can be accessed from
+        :code:`info['state_chain]`.
 
         The reward is calculated at the end of every episode, that is, when
         the length of the chain is equal to the length of the input sequence.
@@ -105,7 +122,7 @@ class Lattice2DEnv(gym.Env):
 
         Returns
         -------
-        OrderedDict
+        numpy.ndarray
             Current state of the lattice.
         int or None
             Reward for the current episode.
@@ -137,20 +154,21 @@ class Lattice2DEnv(gym.Env):
         else:
             self.actions.append(action)
             self.state.update({next_move : self.seq[idx]})
-        # Done signal
+
+        # Set-up return values
+        grid = self._draw_grid(self.state)
         done = True if len(self.state) == len(self.seq) or is_trapped else False
-        # Compute for reward
         reward = self._get_reward(self.state) if done else None
-        # Organize info
         info = {
             'chain_length' : len(self.state),
             'seq_length'   : len(self.seq),
             'collisions'   : self.collisions,
             'actions'      : [ACTION_TO_STR[i] for i in self.actions],
-            'is_trapped'   : is_trapped
+            'is_trapped'   : is_trapped,
+            'state_chain'  : self.state
         }
 
-        return (self.state, reward, done, info)
+        return (grid, reward, done, info)
 
     def reset(self):
         """Resets the environment"""
@@ -158,6 +176,9 @@ class Lattice2DEnv(gym.Env):
         self.actions = []
         self.collisions = 0
         self.trapped = 0
+        self.grid = np.zeros(shape=(self.grid_length, self.grid_length), dtype=int)
+        # Automatically assign first element into grid
+        self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
 
     def _get_adjacent_coords(self, coords):
         """Obtains all adjacent coordinates of the current position
@@ -181,6 +202,27 @@ class Lattice2DEnv(gym.Env):
         }
 
         return adjacent_coords
+
+    def _draw_grid(self, chain):
+        """Constructs a grid with the current chain
+
+        Parameters
+        ----------
+        chain : OrderedDict
+            Current chain/state
+
+        Returns
+        -------
+        numpy.ndarray
+            Grid of shape :code:`(n, n)` with the chain inside
+        """
+        for coord, poly in chain.items():
+            trans_x, trans_y = tuple(sum(x) for x in zip(self.midpoint, coord))
+            # Recall that a numpy array works by indexing the rows first
+            # before the columns, that's why we interchange.
+            self.grid[(trans_y, trans_x)] = POLY_TO_INT[poly]
+
+        return np.flipud(self.grid)
 
     def _get_reward(self, chain):
         """Computes the reward given the lattice's state
