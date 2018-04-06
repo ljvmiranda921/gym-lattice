@@ -87,6 +87,4 @@ In addition, this environment gives **sparse rewards**, that is, reward is
 only computed at the end of each episode.
 
 ## Task List
-- Add test cases and set-up continuous integration
-- Rendering fuctionality
-- Lattice3D (?) *maybe some time in the future*
+- Lattice3DEnv (?) *maybe some time in the future*
