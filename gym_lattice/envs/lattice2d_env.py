@@ -4,11 +4,14 @@
 Implements the 2D Lattice Environment
 """
 # Import gym modules
+import sys
+from collections import OrderedDict
+
 import gym
 import numpy as np
 from gym import error, spaces, utils, logger
 from gym.utils import seeding
-from collections import OrderedDict
+from six import StringIO, b
 
 # Human-readable
 ACTION_TO_STR = {
@@ -90,6 +93,7 @@ class Lattice2DEnv(gym.Env):
         self.observation_space = spaces.Box(low=-2, high=1, 
                                             shape=(self.grid_length, self.grid_length),
                                             dtype=int)
+        self.last_action = None
 
     def step(self, action):
         """Updates the current chain with the specified action.
@@ -147,6 +151,7 @@ class Lattice2DEnv(gym.Env):
         """
         assert self.action_space.contains(action), logger.error("%r (%s) invalid"%(action, type(action)))
 
+        self.last_action = action
         is_trapped = False
         # Obtain coordinate of previous polymer
         x, y = next(reversed(self.state))
@@ -197,6 +202,52 @@ class Lattice2DEnv(gym.Env):
 
         return self.grid
 
+    def render(self, mode='human'):
+        """Renders the environment"""
+
+        outfile = StringIO() if mode == 'ansi' else sys.stdout
+        desc = self.grid.astype(str)
+
+        # Convert everything to human-readable symbols
+        desc[desc == '0'] = '*'
+        desc[desc == '1'] = 'H'
+        desc[desc == '-1'] = 'P'
+
+        # Obtain all x-y indices of elements
+        x_free, y_free = np.where(desc == '*')
+        x_h, y_h = np.where(desc == 'H')
+        x_p, y_p = np.where(desc == 'P')
+
+        # Decode if possible
+        desc.tolist()
+        try:
+            desc = [[c.decode('utf-8') for c in line] for line in desc]
+        except AttributeError:
+            pass
+
+        # All unfilled spaces are gray
+        for xy in zip(x_free, y_free):
+            desc[xy] = utils.colorize(desc[xy], "gray")
+
+        # All hydrophobic molecules are bold-green
+        for xy in zip(x_h, y_h):
+            desc[xy] = utils.colorize(desc[xy], "green", bold=True)
+
+        # All polar molecules are cyan
+        for xy in zip(x_p, y_p):
+            desc[xy] = utils.colorize(desc[xy], "cyan")
+
+        # Provide prompt for last action
+        if self.last_action is not None:
+            outfile.write("  ({})\n".format(["Left","Down","Up","Right"][self.last_action]))
+        else:
+            outfile.write("\n")
+
+        # Draw desc
+        outfile.write("\n".join(''.join(line) for line in desc)+"\n")
+
+        if mode != 'human':
+            return outfile
 
     def _get_adjacent_coords(self, coords):
         """Obtains all adjacent coordinates of the current position
