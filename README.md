@@ -15,6 +15,7 @@ lattice, but different lattice structures will be done in the future.
 
 - numpy==1.14.2
 - gym==0.10.4
+- pytest==3.2.1 *(dev)*
 
 ## Installation
 
