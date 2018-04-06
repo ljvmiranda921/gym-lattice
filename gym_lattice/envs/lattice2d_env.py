@@ -6,7 +6,7 @@ Implements the 2D Lattice Environment
 # Import gym modules
 import gym
 import numpy as np
-from gym import error, spaces, utils
+from gym import error, spaces, utils, logger
 from gym.utils import seeding
 from collections import OrderedDict
 
@@ -135,8 +135,11 @@ class Lattice2DEnv(gym.Env):
         ------
         AssertionError
             When the specified action is invalid.
+        IndexError
+            When :code:`step()` is still called even if done signal
+            is already :code:`True`.
         """
-        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+        assert self.action_space.contains(action), logger.error("%r (%s) invalid"%(action, type(action)))
 
         is_trapped = False
         # Obtain coordinate of previous polymer
@@ -147,13 +150,19 @@ class Lattice2DEnv(gym.Env):
         # Detects for collision or traps in the given coordinate
         idx = len(self.state)
         if set(adj_coords.values()).issubset(self.state):
+            logger.info('Your agent was trapped! Ending the episode.')
             self.trapped += 1
             is_trapped = True
         elif next_move in self.state:
             self.collisions += 1
         else:
             self.actions.append(action)
-            self.state.update({next_move : self.seq[idx]})
+            try:
+                self.state.update({next_move : self.seq[idx]})
+            except IndexError:
+                logger.error('All molecules have been placed! Nothing can be added to the protein chain.')
+                raise
+
 
         # Set-up return values
         grid = self._draw_grid(self.state)
@@ -179,6 +188,9 @@ class Lattice2DEnv(gym.Env):
         self.grid = np.zeros(shape=(self.grid_length, self.grid_length), dtype=int)
         # Automatically assign first element into grid
         self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
+
+        return self.grid
+
 
     def _get_adjacent_coords(self, coords):
         """Obtains all adjacent coordinates of the current position
