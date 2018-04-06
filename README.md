@@ -52,7 +52,7 @@ env = Lattice2DEnv(seq)
 
 for i_episodes in range(5):
     env.reset()
-    while True
+    while True:
         # Sample randomly from action space
         action = action_space.sample()
         obs, reward, done, info = env.step(action)
@@ -70,6 +70,11 @@ Episode finished! Reward: -2 | Collisions: 0 | Actions: ['R', 'U', 'U', 'U']
 Episode finished! Reward: -3 | Collisions: 1 | Actions: ['U', 'L', 'D', 'D']
 Episode finished! Reward: -2 | Collisions: 2 | Actions: ['D', 'R', 'R', 'D']
 ```
+
+Observations are represented as an n-dimensional array with `1` representing
+hydrophobic molecules (H), `1` for polar molecules (P), and `0` for free
+spaces. If you wish to obtain the chain itself, you can do so by accessing
+`info['state_chain']`
 
 An episode ends when all polymers are added to the lattice OR if the sequence
 of actions "traps" the polymer chain. Whenever a collision is detected, the
