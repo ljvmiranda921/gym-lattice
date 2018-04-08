@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ljvmiranda921/gym-lattice.svg?branch=master)](https://travis-ci.org/ljvmiranda921/gym-lattice)
 ![python 3.4+](https://img.shields.io/badge/python-3.4+-blue.svg)
+[![DOI](https://zenodo.org/badge/127895338.svg)](https://zenodo.org/badge/latestdoi/127895338)
 
 An HP 2D Lattice Environment with a Gym-like API for the protein folding
 problem
@@ -98,5 +99,15 @@ only computed at the end of each episode. Here, we are following the
 convention of computing Gibbs free energy where a more "negative" value (less
 energy) denotes a higher reward.
 
-## Task List
-- Lattice3DEnv (?) *maybe some time in the future*
+## Cite us!
+
+```
+@misc{miranda2018gymlattice,
+  author       = {Lester James V. Miranda},
+  title        = {ljvmiranda921/gym-lattice: Initial Release},
+  month        = apr,
+  year         = 2018,
+  doi          = {10.5281/zenodo.1214968},
+  url          = {https://doi.org/10.5281/zenodo.1214968}
+}
+```
