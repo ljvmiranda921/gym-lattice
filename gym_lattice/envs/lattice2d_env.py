@@ -83,23 +83,45 @@ class Lattice2DEnv(gym.Env):
         AssertionError
             If a certain polymer is not 'H' or 'P'
         """
-        assert set(seq.upper()) <= set('HP'), "Invalid input sequence!"
-        assert (collision_penalty < 0) and isinstance(collision_penalty, int), "Collision penalty must be a negative integer!"
-        assert 0 < trap_penalty < 1, "Trap penalty must be between 0 and 1!"
+        try:
+            if not set(seq.upper()) <= set('HP'):
+                raise ValueError("%r (%s) is an invalid sequence" % (seq, type(seq)))
+            self.seq = seq.upper()
+        except AttributeError as error:
+            logger.error("%r (%s) must be of type 'str'" % (seq, type(seq)))
+            raise
 
-        self.seq = seq.upper()
+        try:
+            if collision_penalty >= 0:
+                raise ValueError("%r (%s) must be negative" % (collision_penalty, type(collision_penalty)))
+            if not isinstance(collision_penalty, int):
+                raise ValueError("%r (%s) must be of type 'int'" % (collision_penalty, type(collision_penalty)))
+            self.collision_penalty = collision_penalty
+        except TypeError as error:
+            logger.error("%r (%s) must be of type 'int'" % (collision_penalty, type(collision_penalty)))
+            raise
+
+        try:
+            if not 0 < trap_penalty < 1:
+                raise ValueError("%r (%s) must be between 0 and 1" % (trap_penalty, type(trap_penalty)))
+            self.trap_penalty = trap_penalty
+        except TypeError as error:
+            logger.error("%r (%s) must be of type 'float'" % (trap_penalty, type(trap_penalty)))
+            raise
+
         self.state = OrderedDict({(0, 0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
         self.trapped = 0
-        self.collision_penalty = collision_penalty
-        self.trap_penalty = trap_penalty
+
         # Grid attributes
         self.grid_length = 2 * len(seq) + 1
         self.midpoint = (len(seq), len(seq))
         self.grid = np.zeros(shape=(self.grid_length, self.grid_length), dtype=int)
+
         # Automatically assign first element into grid
         self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
+
         # Define action-observation spaces
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-2, high=1,
@@ -161,14 +183,15 @@ class Lattice2DEnv(gym.Env):
             When :code:`step()` is still called even if done signal
             is already :code:`True`.
         """
-        assert self.action_space.contains(action), logger.error("%r (%s) invalid"%(action, type(action)))
+        if not self.action_space.contains(action):
+            raise ValueError("%r (%s) invalid" % (action, type(action)))
 
         self.last_action = action
         is_trapped = False # Trap signal
         collision = False  # Collision signal
         # Obtain coordinate of previous polymer
         x, y = next(reversed(self.state))
-        # Get all adjacant coords and next move based on action
+        # Get all adjacent coords and next move based on action
         adj_coords = self._get_adjacent_coords((x, y))
         next_move = adj_coords[action]
         # Detects for collision or traps in the given coordinate
@@ -346,9 +369,9 @@ class Lattice2DEnv(gym.Env):
         """
         state_reward = self._compute_free_energy(self.state) if done else 0
         collision_penalty = self.collision_penalty if collision else 0
-        actual_trap_penalty = floor(len(self.seq) * self.trap_penalty) if is_trapped else 0
+        actual_trap_penalty = -floor(len(self.seq) * self.trap_penalty) if is_trapped else 0
         # Compute reward at timestep
-        reward = state_reward + collision_penalty + actual_trap_penalty
+        reward = -state_reward + collision_penalty + actual_trap_penalty
 
         return reward
 
