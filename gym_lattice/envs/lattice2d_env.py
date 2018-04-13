@@ -177,7 +177,7 @@ class Lattice2DEnv(gym.Env):
         # Set-up return values
         grid = self._draw_grid(self.state)
         done = True if len(self.state) == len(self.seq) or is_trapped else False
-        reward = self._get_reward(self.state) if done else None
+        reward = self._compute_free_energy(self.state) if done else None
         info = {
             'chain_length' : len(self.state),
             'seq_length'   : len(self.seq),
@@ -292,8 +292,8 @@ class Lattice2DEnv(gym.Env):
 
         return np.flipud(self.grid)
 
-    def _get_reward(self, chain):
-        """Computes the reward given the lattice's state
+    def _compute_free_energy(self, chain):
+        """Computes the Gibbs free energy given the lattice's state
 
         This environment gives you sparse rewards, i.e., the reward is only
         computed at the end of each episode. This follow the same energy
@@ -314,7 +314,7 @@ class Lattice2DEnv(gym.Env):
         Returns
         -------
         int
-            Computed reward
+            Computed free energy
         """
         h_polymers = [x for x in chain if chain[x] == 'H']
         h_pairs = [(x, y) for x in h_polymers for y in h_polymers]

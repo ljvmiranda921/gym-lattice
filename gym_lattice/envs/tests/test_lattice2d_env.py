@@ -50,13 +50,13 @@ def test_draw_grid(actions, expected_coords):
 @pytest.mark.parametrize("seq,actions,expected",
     [('HH', [0], -1), ('HHHH', [0,1,3], -4),
      ('HP', [0], 0),  ('PPPPH', [0,1,2,3], 0)])
-def test_get_reward(seq, actions, expected):
-    """Tests private method _get_reward()"""
+def test_compute_free_energy(seq, actions, expected):
+    """Tests private method _compute_free_energy()"""
     from gym_lattice.envs import Lattice2DEnv
     env = Lattice2DEnv(seq)
     for action in actions:
         env.step(action)
-    result = env._get_reward(env.state)
+    result = env._compute_free_energy(env.state)
     assert expected == result
 
 @pytest.fixture
