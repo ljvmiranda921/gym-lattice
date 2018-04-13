@@ -9,9 +9,8 @@ from collections import OrderedDict
 
 import gym
 import numpy as np
-from gym import error, spaces, utils, logger
-from gym.utils import seeding
-from six import StringIO, b
+from gym import (spaces, utils, logger)
+from six import StringIO
 
 # Human-readable
 ACTION_TO_STR = {
@@ -78,7 +77,7 @@ class Lattice2DEnv(gym.Env):
         assert set(seq.upper()) <= set('HP'), "Invalid input sequence!"
 
         self.seq = seq.upper()
-        self.state = OrderedDict({(0,0) : self.seq[0]})
+        self.state = OrderedDict({(0, 0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
         self.trapped = 0
@@ -90,7 +89,7 @@ class Lattice2DEnv(gym.Env):
         self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
         # Define action-observation spaces
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=-2, high=1, 
+        self.observation_space = spaces.Box(low=-2, high=1,
                                             shape=(self.grid_length, self.grid_length),
                                             dtype=int)
         self.last_action = None
@@ -156,7 +155,7 @@ class Lattice2DEnv(gym.Env):
         # Obtain coordinate of previous polymer
         x, y = next(reversed(self.state))
         # Get all adjacant coords and next move based on action
-        adj_coords = self._get_adjacent_coords((x,y))
+        adj_coords = self._get_adjacent_coords((x, y))
         next_move = adj_coords[action]
         # Detects for collision or traps in the given coordinate
         idx = len(self.state)
@@ -239,7 +238,7 @@ class Lattice2DEnv(gym.Env):
 
         # Provide prompt for last action
         if self.last_action is not None:
-            outfile.write("  ({})\n".format(["Left","Down","Up","Right"][self.last_action]))
+            outfile.write("  ({})\n".format(["Left", "Down", "Up", "Right"][self.last_action]))
         else:
             outfile.write("\n")
 
