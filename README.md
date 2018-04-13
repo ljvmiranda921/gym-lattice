@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ljvmiranda921/gym-lattice.svg?branch=master)](https://travis-ci.org/ljvmiranda921/gym-lattice)
 ![python 3.4+](https://img.shields.io/badge/python-3.4+-blue.svg)
+[![DOI](https://zenodo.org/badge/127895338.svg)](https://zenodo.org/badge/latestdoi/127895338)
 
 An HP 2D Lattice Environment with a Gym-like API for the protein folding
 problem
@@ -28,22 +29,22 @@ Screenshots from `render()`:
 
 ## Installation
 
-First, clone this repository with the following command:
+This package is only compatible for Python 3.4 and above. To install this
+package, please follow the instructions below:
+
+1. Install [OpenAI Gym](https://gym.openai.com/docs/#installation) and its dependencies.
+2. Install the package itself:
 
 ```
 git clone https://github.com/ljvmiranda921/gym-lattice.git
-```
-
-and then install via `pip`:
-
-```
+cd gym-lattice
 pip install -e .
 ```
 
 ## Usage
 
-In this environment, there are four possible actions that your agent can
-perform: `0` (left), `1` (down), `2` (up), and `3` (right). The number
+In this environment, your agent can perform four possible actions: 
+`0` (left), `1` (down), `2` (up), and `3` (right). The number
 choices may seem funky at first but just remember that it maps to the
 standard vim keybindings.
 
@@ -82,18 +83,31 @@ Episode finished! Reward: -3 | Collisions: 1 | Actions: ['U', 'L', 'D', 'D']
 Episode finished! Reward: -2 | Collisions: 2 | Actions: ['D', 'R', 'R', 'D']
 ```
 
-Observations are represented as an n-dimensional array with `1` representing
-hydrophobic molecules (H), `1` for polar molecules (P), and `0` for free
+Observations are represented as a 2-dimensional array with `1` representing
+hydrophobic molecules (H), `-1` for polar molecules (P), and `0` for free
 spaces. If you wish to obtain the chain itself, you can do so by accessing
-`info['state_chain']`
+`info['state_chain']`.
 
 An episode ends when all polymers are added to the lattice OR if the sequence
-of actions "traps" the polymer chain. Whenever a collision is detected, the
-agent should enter another action. We account for the number of collisions so
-you can use them when you customize your own reward functions for learning.
+of actions "traps" the polymer chain (no more valid moves). Whenever a collision
+is detected, the agent should enter another action. We account for the number
+of collisions so you can use them to customize your own reward functions
+for learning.
 
 In addition, this environment gives **sparse rewards**, that is, reward is
-only computed at the end of each episode.
+only computed at the end of each episode. Here, we are following the
+convention of computing Gibbs free energy where a more "negative" value (less
+energy) denotes a higher reward.
 
-## Task List
-- Lattice3DEnv (?) *maybe some time in the future*
+## Cite us!
+
+```
+@misc{miranda2018gymlattice,
+  author       = {Lester James V. Miranda},
+  title        = {ljvmiranda921/gym-lattice: Initial Release},
+  month        = apr,
+  year         = 2018,
+  doi          = {10.5281/zenodo.1214968},
+  url          = {https://doi.org/10.5281/zenodo.1214968}
+}
+```
