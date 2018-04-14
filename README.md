@@ -44,14 +44,18 @@ pip install -e .
 ## Environment
 
 **Objective**: given a sequence of *H* and *P* molecules, find a configuration
-with the highest number of adjacent **H-H** pairs.
-
-Your base score is determined by the number of **H-H** pairs you can create.
+with the highest number of adjacent **H-H** pairs. Your base score is
+determined by the number of **H-H** pairs you can create.
 
 <img src="/assets/pfolding_problem.svg" width="700">
 
 
-**Rules**
+**Folding Rules**
+As with most "games", there are some rules that must be observed when folding
+proteins. We then pattern our rules from [Dill and Lau's (1989) lattice statistical
+mechanics](https://pubs.acs.org/doi/abs/10.1021/ma00200a030) for protein
+conformation. For our purposes, here it is in its simplest form:
+
 1. You can only perform the following actions: left, down, up, or right.
 2. You can only put a molecule adjacent to the previous one you've placed.
 3. Assigning a molecule to an occupied space will incur a penalty.
@@ -132,6 +136,8 @@ reward_t = state_reward + collision_penalty + trap_penalty
 - The `trap_penalty` is only computed whenever the agent has no more moves left and is unable to finish the task. The episode ends, thus computing the `state_reward`, but subtracts a deduction dependent on the length of the actual sequence.
 
 ## Cite us!
+
+Are you using `gym-lattice` in your paper or project? Cite us!
 
 ```
 @misc{miranda2018gymlattice,
