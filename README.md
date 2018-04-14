@@ -41,14 +41,28 @@ cd gym-lattice
 pip install -e .
 ```
 
-## Usage
+## Environment
 
-In this environment, your agent can perform four possible actions: 
-`0` (left), `1` (down), `2` (up), and `3` (right). The number
-choices may seem funky at first but just remember that it maps to the
-standard vim keybindings.
+The objective of this environment is to find a configuration with the highest
+number of adjacent **H-H** pairs given a sequence consisting of *H* and *P*
+molecules.
 
-Let's try this out with a random agent on the protein sequence `HHPHH`!
+<img src="/assets/pfolding_problem.svg" width="700">
+
+You can only put a molecule around (left, down, up, right) the one you've
+previously placed. Assigning a molecule to an occupied space incurs a
+penalty, while trapping yourself and running out of moves will incur a heavy
+deduction.
+
+<img src="/assets/pfolding_penalty.svg" width="700">
+
+## Basic Usage
+
+Initializing the environment will require the protein sequence of type `str`.
+In addition, you can also set the amount of penalty incurred during a
+collision or whenever the agent is trapped.
+
+Let's try this out with a random agent on the protein sequence **HHPHH**!
 
 ```python
 from gym_lattice.envs import Lattice2DEnv
@@ -58,13 +72,13 @@ import numpy as np
 np.random.seed(42)
 
 seq = 'HHPHH' # Our input sequence
-action_space = spaces.Discrete(4) # Discrete space from 0 to 3
+action_space = spaces.Discrete(4) # Choose among [0, 1, 2 ,3]
 env = Lattice2DEnv(seq)
 
 for i_episodes in range(5):
     env.reset()
     while True:
-        # Sample randomly from action space
+        # Random agent samples from action space
         action = action_space.sample()
         obs, reward, done, info = env.step(action)
         env.render()
@@ -83,21 +97,36 @@ Episode finished! Reward: -3 | Collisions: 1 | Actions: ['U', 'L', 'D', 'D']
 Episode finished! Reward: -2 | Collisions: 2 | Actions: ['D', 'R', 'R', 'D']
 ```
 
+### Actions
+
+Your agent can perform four possible actions: `0` (left), `1` (down), `2`
+(up), and `3` (right). The number choices may seem funky at first but just
+remember that it maps to the standard vim keybindings.
+
+### Observations
+
 Observations are represented as a 2-dimensional array with `1` representing
 hydrophobic molecules (H), `-1` for polar molecules (P), and `0` for free
 spaces. If you wish to obtain the chain itself, you can do so by accessing
 `info['state_chain']`.
 
 An episode ends when all polymers are added to the lattice OR if the sequence
-of actions "traps" the polymer chain (no more valid moves). Whenever a collision
-is detected, the agent should enter another action. We account for the number
-of collisions so you can use them to customize your own reward functions
-for learning.
+of actions traps the polymer chain (no more valid moves because surrounding
+space is fully-occupied). Whenever a collision is detected, the agent should
+enter another action.
 
-In addition, this environment gives **sparse rewards**, that is, reward is
-only computed at the end of each episode. Here, we are following the
-convention of computing Gibbs free energy where a more "negative" value (less
-energy) denotes a higher reward.
+### Rewards
+
+This environment computes the reward in the following manner:
+
+```python
+# Reward at timestep t
+reward_t = state_reward + collision_penalty + trap_penalty
+```
+
+- The `state_reward` is the number of adjacent H-H molecules in the **final** state. In protein folding, the state_reward is synonymous to computing the Gibbs free energy, i.e., thermodynamic assumption of a stable molecule. Its value is 0 in all timesteps and is only computed at the end of the episode.  
+- The `collision_penalty` at timestep t accounts for collision events whenever the agent chooses to put a molecule at an already-occupied space. Its default value is -2, but this can be adjusted by setting the `collision_penalty` at initialization.
+- The `trap_penalty` is only computed whenever the agent has no more moves left and is unable to finish the task. The episode ends, thus computing the `state_reward`, but subtracts a deduction dependent on the length of the actual sequence.
 
 ## Cite us!
 

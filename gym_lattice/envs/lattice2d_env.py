@@ -5,6 +5,7 @@ Implements the 2D Lattice Environment
 """
 # Import gym modules
 import sys
+from math import floor
 from collections import OrderedDict
 
 import gym
@@ -29,11 +30,12 @@ class Lattice2DEnv(gym.Env):
     the polymer is stated independently from one another. Thus, we have
     four actions (left, right, up, and down) and a chance of collision.
 
-    The environment will first place the initial polymer at the origin.
-    Then, for each step, agents place another polymer to the lattice. An episode
+    The environment will first place the initial polymer at the origin. Then,
+    for each step, agents place another polymer to the lattice. An episode
     ends when all polymers are placed, i.e. when the length of the action
     chain is equal to the length of the input sequence minus 1. We then
-    compute the reward using the energy minimization rule.
+    compute the reward using the energy minimization rule while accounting
+    for the collisions and traps.
 
     Attributes
     ----------
@@ -61,32 +63,65 @@ class Lattice2DEnv(gym.Env):
     """
     metadata = {'render.modes': ['human', 'ansi']}
 
-    def __init__(self, seq):
+    def __init__(self, seq, collision_penalty=-2, trap_penalty=0.5):
         """Initializes the lattice
 
         Parameters
         ----------
         seq : str, must only consist of 'H' or 'P'
             Sequence containing the polymer chain.
+        collision_penalty : int, must be a negative value
+            Penalty incurred when the agent made an invalid action.
+            Default is -2.
+        trap_penalty : float, must be between 0 and 1
+            Penalty incurred when the agent is trapped. Actual value is
+            computed as :code:`floor(length_of_sequence * trap_penalty)`
+            Default is -2.
 
         Raises
         ------
         AssertionError
             If a certain polymer is not 'H' or 'P'
         """
-        assert set(seq.upper()) <= set('HP'), "Invalid input sequence!"
+        try:
+            if not set(seq.upper()) <= set('HP'):
+                raise ValueError("%r (%s) is an invalid sequence" % (seq, type(seq)))
+            self.seq = seq.upper()
+        except AttributeError as error:
+            logger.error("%r (%s) must be of type 'str'" % (seq, type(seq)))
+            raise
 
-        self.seq = seq.upper()
+        try:
+            if collision_penalty >= 0:
+                raise ValueError("%r (%s) must be negative" % (collision_penalty, type(collision_penalty)))
+            if not isinstance(collision_penalty, int):
+                raise ValueError("%r (%s) must be of type 'int'" % (collision_penalty, type(collision_penalty)))
+            self.collision_penalty = collision_penalty
+        except TypeError as error:
+            logger.error("%r (%s) must be of type 'int'" % (collision_penalty, type(collision_penalty)))
+            raise
+
+        try:
+            if not 0 < trap_penalty < 1:
+                raise ValueError("%r (%s) must be between 0 and 1" % (trap_penalty, type(trap_penalty)))
+            self.trap_penalty = trap_penalty
+        except TypeError as error:
+            logger.error("%r (%s) must be of type 'float'" % (trap_penalty, type(trap_penalty)))
+            raise
+
         self.state = OrderedDict({(0, 0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
         self.trapped = 0
+
         # Grid attributes
         self.grid_length = 2 * len(seq) + 1
         self.midpoint = (len(seq), len(seq))
         self.grid = np.zeros(shape=(self.grid_length, self.grid_length), dtype=int)
+
         # Automatically assign first element into grid
         self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
+
         # Define action-observation spaces
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-2, high=1,
@@ -148,13 +183,15 @@ class Lattice2DEnv(gym.Env):
             When :code:`step()` is still called even if done signal
             is already :code:`True`.
         """
-        assert self.action_space.contains(action), logger.error("%r (%s) invalid"%(action, type(action)))
+        if not self.action_space.contains(action):
+            raise ValueError("%r (%s) invalid" % (action, type(action)))
 
         self.last_action = action
-        is_trapped = False
+        is_trapped = False # Trap signal
+        collision = False  # Collision signal
         # Obtain coordinate of previous polymer
         x, y = next(reversed(self.state))
-        # Get all adjacant coords and next move based on action
+        # Get all adjacent coords and next move based on action
         adj_coords = self._get_adjacent_coords((x, y))
         next_move = adj_coords[action]
         # Detects for collision or traps in the given coordinate
@@ -165,6 +202,7 @@ class Lattice2DEnv(gym.Env):
             is_trapped = True
         elif next_move in self.state:
             self.collisions += 1
+            collision = True
         else:
             self.actions.append(action)
             try:
@@ -173,11 +211,10 @@ class Lattice2DEnv(gym.Env):
                 logger.error('All molecules have been placed! Nothing can be added to the protein chain.')
                 raise
 
-
         # Set-up return values
         grid = self._draw_grid(self.state)
         done = True if len(self.state) == len(self.seq) or is_trapped else False
-        reward = self._get_reward(self.state) if done else None
+        reward = self._compute_reward(is_trapped, collision, done)
         info = {
             'chain_length' : len(self.state),
             'seq_length'   : len(self.seq),
@@ -292,12 +329,58 @@ class Lattice2DEnv(gym.Env):
 
         return np.flipud(self.grid)
 
-    def _get_reward(self, chain):
-        """Computes the reward given the lattice's state
+    def _compute_reward(self, is_trapped, collision, done):
+        """Computes the reward for a given time step
 
-        This environment gives you sparse rewards, i.e., the reward is only
-        computed at the end of each episode. This follow the same energy
-        function given by Dill et. al. [dill1989lattice]_
+        For every timestep, we compute the reward using the following function:
+
+        .. code-block:: python
+
+            reward_t = state_reward 
+                       + collision_penalty
+                       + actual_trap_penalty
+
+        The :code:`state_reward` is only computed at the end of the episode
+        (Gibbs free energy) and its value is :code:`0` for every timestep
+        before that.
+
+        The :code:`collision_penalty` is given when the agent makes an invalid
+        move, i.e. going to a space that is already occupied.
+
+        The :code:`actual_trap_penalty` is computed whenever the agent
+        completely traps itself and has no more moves available. Overall, we
+        still compute for the :code:`state_reward` of the current chain but
+        subtract that with the following equation:
+        :code:`floor(length_of_sequence * trap_penalty)`
+
+        Parameters
+        ----------
+        is_trapped : bool
+            Signal indicating if the agent is trapped.
+        done : bool
+            Done signal
+        collision : bool
+            Collision signal
+
+        Returns
+        -------
+        int
+            Reward function
+        """
+        state_reward = self._compute_free_energy(self.state) if done else 0
+        collision_penalty = self.collision_penalty if collision else 0
+        actual_trap_penalty = -floor(len(self.seq) * self.trap_penalty) if is_trapped else 0
+        # Compute reward at timestep
+        reward = -state_reward + collision_penalty + actual_trap_penalty
+
+        return reward
+
+    def _compute_free_energy(self, chain):
+        """Computes the Gibbs free energy given the lattice's state
+
+        The free energy is only computed at the end of each episode. This
+        follow the same energy function given by Dill et. al.
+        [dill1989lattice]_
 
         Recall that the goal is to find the configuration with the lowest
         energy.
@@ -314,7 +397,7 @@ class Lattice2DEnv(gym.Env):
         Returns
         -------
         int
-            Computed reward
+            Computed free energy
         """
         h_polymers = [x for x in chain if chain[x] == 'H']
         h_pairs = [(x, y) for x in h_polymers for y in h_polymers]
