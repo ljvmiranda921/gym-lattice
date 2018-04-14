@@ -11,7 +11,7 @@ dev_requirements = [
 ]
 
 setup(name='gym_lattice',
-      version='0.0.1',
+      version='0.0.2',
       install_requires=requirements,
       description="An HP 2D Lattice Gym Environment for Protein Folding",
       author="Lester James V. Miranda",
