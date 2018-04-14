@@ -133,10 +133,11 @@ reward_t = state_reward + collision_penalty + trap_penalty
 ```
 @misc{miranda2018gymlattice,
   author       = {Lester James V. Miranda},
-  title        = {ljvmiranda921/gym-lattice: Initial Release},
+  title        = {gym-lattice: an HP 2D Lattice Environment with a 
+                  Gym-like API for the protein folding problem},
   month        = apr,
   year         = 2018,
-  doi          = {10.5281/zenodo.1214968},
-  url          = {https://doi.org/10.5281/zenodo.1214968}
+  doi          = {10.5281/zenodo.1214967},
+  url          = {https://doi.org/10.5281/zenodo.1214967}
 }
 ```
