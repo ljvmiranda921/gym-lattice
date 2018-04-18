@@ -115,7 +115,6 @@ def test_compute_reward_with_trap():
     actions = [0, 2, 2, 3, 3, 1, 0, 1]
     for _ , action in enumerate(actions):
         _, reward, done, _ = env.step(action)
-        print(done, action, expected_reward, reward)
         if done:
             assert expected_reward == reward
 
