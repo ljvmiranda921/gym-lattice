@@ -352,6 +352,7 @@ class Lattice2DEnv(gym.Env):
         still compute for the :code:`state_reward` of the current chain but
         subtract that with the following equation:
         :code:`floor(length_of_sequence * trap_penalty)`
+        try:
 
         Parameters
         ----------
@@ -409,6 +410,16 @@ class Lattice2DEnv(gym.Env):
             if dist == 1.0: # adjacent pairs have a unit distance
                 h_adjacent.append(pair)
 
-        # Remove duplicate pairs of pairs
-        reward = - len(h_adjacent) / 2
+        # Get the number of consecutive H-pairs in the string,
+        # these are not included in computing the energy
+        h_consecutive = 0
+        for i in range(1, len(self.seq)):
+            if self.seq[i] == self.seq[i-1]:
+                h_consecutive += 1
+
+        # Remove duplicate pairs of pairs and subtract the
+        # consecutive pairs
+        nb_h_adjacent = len(h_adjacent) / 2
+        gibbs_energy = nb_h_adjacent - h_consecutive
+        reward = - gibbs_energy
         return int(reward)
