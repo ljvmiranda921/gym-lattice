@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# TeX files
+*.aux
+*.fdb_latexmk
+*.fls
+*.pdf
+*.synctex.gz
+
 # Ipython notebooks
 .ipynb_checkpoints
 

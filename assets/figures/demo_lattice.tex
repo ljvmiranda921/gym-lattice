@@ -1,0 +1,59 @@
+% ==================================================
+% Asset file for gym-lattice
+% Author: Lester James V. Miranda
+
+\begin{tikzpicture}[
+    node distance=20mm,
+    agent/.style={draw,rounded corners,thick,color=black,fill=white},
+    latticegrid/.style={very thin,gray!40,step=10mm},
+    container/.style={draw,white,minimum width=45mm, minimum height=45mm},
+    hydrophobic/.style={circle,fill=black,text=white},
+    polar/.style={circle,fill=white,text=black},
+    unknown/.style={circle,red,thick,text=black,dashed},
+    new/.style={circle,thick,text=black,dashed},
+    hbonds/.style={very thick,red},
+    bonds/.style={->,thick,black},
+    collision/.style={->,very thick, red}
+]
+
+
+% Draw grid
+\node[container,label={[align=center,yshift=0.6cm]
+                        Find a configuration\\
+                        with the highest number\\
+                        of H-H pairs (\textcolor{red}{red} line)}] (lattice) {};
+\draw[latticegrid] (lattice.south west) grid (lattice.north east);
+
+% Draw molecules
+\draw[hydrophobic] ($(lattice.center)+(-10mm,10mm)$)  circle (4mm) node (s1) {H};
+\draw[hydrophobic] ($(lattice.center)+(-10mm,0mm)$)  circle (4mm) node (s2) {H};
+\draw[hydrophobic] ($(lattice.center)+(-10mm,-10mm)$)  circle (4mm) node (s3) {H};
+\draw[polar]       ($(lattice.center)+(0mm,-10mm)$) circle (4mm) node (s4) {P};
+\draw[hydrophobic] ($(lattice.center)+(0mm,0mm)$) circle (4mm) node (s5) {H};
+\draw[polar]       ($(lattice.center)+(10mm,0mm)$) circle (4mm) node (s6) {P};
+\draw[polar]       ($(lattice.center)+(10mm,10mm)$) circle (4mm) node (s7) {P};
+\draw[hydrophobic] ($(lattice.center)+(0mm,10mm)$) circle (4mm) node (s8) {H};
+\draw[hydrophobic] ($(lattice.center)+(0mm,20mm)$)   circle (4mm) node (s9) {H};
+
+% Draw bonds
+\draw[bonds] (s1) -- (s2);
+\draw[bonds] (s2) -- (s3);
+\draw[bonds] (s3) -- (s4);
+\draw[bonds] (s4) -- (s5);
+\draw[bonds] (s5) -- (s6);
+\draw[bonds] (s6) -- (s7);
+\draw[bonds] (s7) -- (s8);
+\draw[bonds] (s8) -- (s9);
+\draw[hbonds] (s1) -- (s8);
+\draw[hbonds] (s2) -- (s5);
+\draw[hbonds] (s5) -- (s8);
+
+% Add a node
+\node[agent,text=black, align=center, label={[align=center,yshift=3.0cm]Given a protein sequence,}]
+    (textbox)[left= of lattice]{\Large $HHHPHPPHH$};
+
+% Draw bonds
+\draw[bonds] (textbox.east) -- (lattice.west);
+
+
+\end{tikzpicture}

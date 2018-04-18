@@ -1,0 +1,30 @@
+% ==================================================
+% Asset file for gym-lattice
+% Author: Lester James V. Miranda
+%
+% To compile, simpy run:
+%     >>> pdflatex -shell-escape rules.tex
+%
+% This creates both .pdf and .svg files that you can
+% see in the README.md
+
+\documentclass[preview,convert={outfile=\jobname.png,density=300}]{standalone}
+
+\usepackage{tikz}
+\usepackage{color}
+\usepackage{subfig}
+
+\renewcommand\familydefault{\sfdefault}
+
+\usetikzlibrary{
+    matrix,shapes,
+    arrows,positioning,
+    calc}
+
+\def\checkmark{
+    \tikz\fill[scale=0.4]
+        (0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+\begin{document}
+    \input{./figures/demo_lattice.tex}
+\end{document}
