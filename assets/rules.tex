@@ -1,0 +1,41 @@
+% ==================================================
+% Asset file for gym-lattice
+% Author: Lester James V. Miranda
+%
+% To compile, simpy run:
+%     >>> pdflatex -shell-escape rules.tex
+%
+% This creates both .pdf and .svg files that you can
+% see in the README.md
+
+\documentclass[preview,convert={outfile=\jobname.svg}]{standalone}
+
+\usepackage{tikz}
+\usepackage{subfig}
+
+\renewcommand\familydefault{\sfdefault}
+
+\usetikzlibrary{
+    matrix,shapes,
+    arrows,positioning,
+    calc}
+
+\def\checkmark{
+    \tikz\fill[scale=0.4]
+        (0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+\begin{document}
+    \begin{figure}
+        \centering
+        %\vspace*{-20pt}
+        \subfloat[Cannot move diagonally]
+        {\input{./figures/actions_ldur.tex}}\qquad
+        \subfloat[Must always be adjacent to $n_{t-1}$]
+        {\input{./figures/actions_adjacent.tex}}\\
+        \subfloat[Collisions are recorded and penalized]
+        {\input{./figures/actions_collision.tex}}\qquad
+        \subfloat[Trapping an agent incurs heavy deduction]
+        {\input{./figures/actions_trap.tex}}
+    \end{figure}
+\end{document}
+

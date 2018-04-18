@@ -1,0 +1,31 @@
+% ==================================================
+% Asset file for gym-lattice
+% Author: Lester James V. Miranda
+
+\begin{tikzpicture}[
+    latticegrid/.style={very thin,gray!40,step=10mm},
+    container/.style={draw,white,minimum width=30mm, minimum height=24mm},
+    hydrophobic/.style={circle,fill=black,text=white},
+    polar/.style={circle,fill=white,text=black},
+    unknown/.style={circle,red,thick,text=red,dashed},
+    new/.style={circle,thick,text=black,dashed},
+    hbonds/.style={very thick,red},
+    bonds/.style={->,thick,black}
+]
+
+% Draw grid
+\node[container] (lattice) {};
+\draw[latticegrid] (lattice.south west) grid (lattice.north east);
+
+% Draw molecules
+\draw[hydrophobic] ($(lattice.center)+(0,0)$) circle (4mm) node (s0) {H};
+\draw[hydrophobic] ($(lattice.center)+(-10mm,0mm)$) circle (4mm) node (s1) {H};
+\draw[polar] ($(lattice.center)+(-10mm,10mm)$) circle (4mm) node (s2) {P};
+\draw[bonds] (s0) -- (s1);
+\draw[bonds] (s1) -- (s2);
+
+% Draw new and unknown
+\draw[new] ($(lattice.center)+(0mm,10mm)$) circle (4mm) node (legal) {\checkmark};
+\draw[unknown] ($(lattice.center)+(10mm,-10mm)$) circle (4mm) node (unk) {X};
+
+\end{tikzpicture}
