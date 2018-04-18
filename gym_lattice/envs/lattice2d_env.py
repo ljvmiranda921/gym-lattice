@@ -9,8 +9,8 @@ from math import floor
 from collections import OrderedDict
 
 import gym
-import numpy as np
 from gym import (spaces, utils, logger)
+import numpy as np
 from six import StringIO
 
 # Human-readable
@@ -87,26 +87,31 @@ class Lattice2DEnv(gym.Env):
             if not set(seq.upper()) <= set('HP'):
                 raise ValueError("%r (%s) is an invalid sequence" % (seq, type(seq)))
             self.seq = seq.upper()
-        except AttributeError as error:
+        except AttributeError:
             logger.error("%r (%s) must be of type 'str'" % (seq, type(seq)))
             raise
 
         try:
             if collision_penalty >= 0:
-                raise ValueError("%r (%s) must be negative" % (collision_penalty, type(collision_penalty)))
+                raise ValueError("%r (%s) must be negative" %
+                                 (collision_penalty, type(collision_penalty)))
             if not isinstance(collision_penalty, int):
-                raise ValueError("%r (%s) must be of type 'int'" % (collision_penalty, type(collision_penalty)))
+                raise ValueError("%r (%s) must be of type 'int'" %
+                                 (collision_penalty, type(collision_penalty)))
             self.collision_penalty = collision_penalty
-        except TypeError as error:
-            logger.error("%r (%s) must be of type 'int'" % (collision_penalty, type(collision_penalty)))
+        except TypeError:
+            logger.error("%r (%s) must be of type 'int'" %
+                         (collision_penalty, type(collision_penalty)))
             raise
 
         try:
             if not 0 < trap_penalty < 1:
-                raise ValueError("%r (%s) must be between 0 and 1" % (trap_penalty, type(trap_penalty)))
+                raise ValueError("%r (%s) must be between 0 and 1" %
+                                 (trap_penalty, type(trap_penalty)))
             self.trap_penalty = trap_penalty
-        except TypeError as error:
-            logger.error("%r (%s) must be of type 'float'" % (trap_penalty, type(trap_penalty)))
+        except TypeError:
+            logger.error("%r (%s) must be of type 'float'" %
+                         (trap_penalty, type(trap_penalty)))
             raise
 
         self.state = OrderedDict({(0, 0) : self.seq[0]})
@@ -196,8 +201,8 @@ class Lattice2DEnv(gym.Env):
         next_move = adj_coords[action]
         # Detects for collision or traps in the given coordinate
         idx = len(self.state)
-        if set(adj_coords.values()).issubset(self.state):
-            logger.info('Your agent was trapped! Ending the episode.')
+        if set(adj_coords.values()).issubset(self.state.keys()):
+            logger.warn('Your agent was trapped! Ending the episode.')
             self.trapped += 1
             is_trapped = True
         elif next_move in self.state:
@@ -213,7 +218,7 @@ class Lattice2DEnv(gym.Env):
 
         # Set-up return values
         grid = self._draw_grid(self.state)
-        done = True if len(self.state) == len(self.seq) or is_trapped else False
+        done = True if (len(self.state) == len(self.seq) or is_trapped) else False
         reward = self._compute_reward(is_trapped, collision, done)
         info = {
             'chain_length' : len(self.state),
@@ -228,7 +233,7 @@ class Lattice2DEnv(gym.Env):
 
     def reset(self):
         """Resets the environment"""
-        self.state = OrderedDict({(0,0) : self.seq[0]})
+        self.state = OrderedDict({(0, 0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
         self.trapped = 0
@@ -262,16 +267,16 @@ class Lattice2DEnv(gym.Env):
             pass
 
         # All unfilled spaces are gray
-        for xy in zip(x_free, y_free):
-            desc[xy] = utils.colorize(desc[xy], "gray")
+        for unfilled_coords in zip(x_free, y_free):
+            desc[unfilled_coords] = utils.colorize(desc[unfilled_coords], "gray")
 
         # All hydrophobic molecules are bold-green
-        for xy in zip(x_h, y_h):
-            desc[xy] = utils.colorize(desc[xy], "green", bold=True)
+        for hmol_coords in zip(x_h, y_h):
+            desc[hmol_coords] = utils.colorize(desc[hmol_coords], "green", bold=True)
 
         # All polar molecules are cyan
-        for xy in zip(x_p, y_p):
-            desc[xy] = utils.colorize(desc[xy], "cyan")
+        for pmol_coords in zip(x_p, y_p):
+            desc[pmol_coords] = utils.colorize(desc[pmol_coords], "cyan")
 
         # Provide prompt for last action
         if self.last_action is not None:
@@ -352,6 +357,7 @@ class Lattice2DEnv(gym.Env):
         still compute for the :code:`state_reward` of the current chain but
         subtract that with the following equation:
         :code:`floor(length_of_sequence * trap_penalty)`
+        try:
 
         Parameters
         ----------
@@ -370,8 +376,10 @@ class Lattice2DEnv(gym.Env):
         state_reward = self._compute_free_energy(self.state) if done else 0
         collision_penalty = self.collision_penalty if collision else 0
         actual_trap_penalty = -floor(len(self.seq) * self.trap_penalty) if is_trapped else 0
-        # Compute reward at timestep
-        reward = -state_reward + collision_penalty + actual_trap_penalty
+
+        # Compute reward at timestep, the state_reward is originally
+        # negative (Gibbs), so we invert its sign.
+        reward = - state_reward + collision_penalty + actual_trap_penalty
 
         return reward
 
@@ -409,6 +417,16 @@ class Lattice2DEnv(gym.Env):
             if dist == 1.0: # adjacent pairs have a unit distance
                 h_adjacent.append(pair)
 
-        # Remove duplicate pairs of pairs
-        reward = - len(h_adjacent) / 2
+        # Get the number of consecutive H-pairs in the string,
+        # these are not included in computing the energy
+        h_consecutive = 0
+        for i in range(1, len(self.state)):
+            if (self.seq[i] == 'H') and (self.seq[i] == self.seq[i-1]):
+                h_consecutive += 1
+
+        # Remove duplicate pairs of pairs and subtract the
+        # consecutive pairs
+        nb_h_adjacent = len(h_adjacent) / 2
+        gibbs_energy = nb_h_adjacent - h_consecutive
+        reward = - gibbs_energy
         return int(reward)
