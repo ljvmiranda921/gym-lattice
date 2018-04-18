@@ -9,8 +9,8 @@ from math import floor
 from collections import OrderedDict
 
 import gym
-import numpy as np
 from gym import (spaces, utils, logger)
+import numpy as np
 from six import StringIO
 
 # Human-readable
@@ -87,26 +87,31 @@ class Lattice2DEnv(gym.Env):
             if not set(seq.upper()) <= set('HP'):
                 raise ValueError("%r (%s) is an invalid sequence" % (seq, type(seq)))
             self.seq = seq.upper()
-        except AttributeError as error:
+        except AttributeError:
             logger.error("%r (%s) must be of type 'str'" % (seq, type(seq)))
             raise
 
         try:
             if collision_penalty >= 0:
-                raise ValueError("%r (%s) must be negative" % (collision_penalty, type(collision_penalty)))
+                raise ValueError("%r (%s) must be negative" %
+                                 (collision_penalty, type(collision_penalty)))
             if not isinstance(collision_penalty, int):
-                raise ValueError("%r (%s) must be of type 'int'" % (collision_penalty, type(collision_penalty)))
+                raise ValueError("%r (%s) must be of type 'int'" %
+                                 (collision_penalty, type(collision_penalty)))
             self.collision_penalty = collision_penalty
-        except TypeError as error:
-            logger.error("%r (%s) must be of type 'int'" % (collision_penalty, type(collision_penalty)))
+        except TypeError:
+            logger.error("%r (%s) must be of type 'int'" %
+                         (collision_penalty, type(collision_penalty)))
             raise
 
         try:
             if not 0 < trap_penalty < 1:
-                raise ValueError("%r (%s) must be between 0 and 1" % (trap_penalty, type(trap_penalty)))
+                raise ValueError("%r (%s) must be between 0 and 1" %
+                                 (trap_penalty, type(trap_penalty)))
             self.trap_penalty = trap_penalty
-        except TypeError as error:
-            logger.error("%r (%s) must be of type 'float'" % (trap_penalty, type(trap_penalty)))
+        except TypeError:
+            logger.error("%r (%s) must be of type 'float'" %
+                         (trap_penalty, type(trap_penalty)))
             raise
 
         self.state = OrderedDict({(0, 0) : self.seq[0]})
@@ -228,7 +233,7 @@ class Lattice2DEnv(gym.Env):
 
     def reset(self):
         """Resets the environment"""
-        self.state = OrderedDict({(0,0) : self.seq[0]})
+        self.state = OrderedDict({(0, 0) : self.seq[0]})
         self.actions = []
         self.collisions = 0
         self.trapped = 0
@@ -262,16 +267,16 @@ class Lattice2DEnv(gym.Env):
             pass
 
         # All unfilled spaces are gray
-        for xy in zip(x_free, y_free):
-            desc[xy] = utils.colorize(desc[xy], "gray")
+        for unfilled_coords in zip(x_free, y_free):
+            desc[unfilled_coords] = utils.colorize(desc[unfilled_coords], "gray")
 
         # All hydrophobic molecules are bold-green
-        for xy in zip(x_h, y_h):
-            desc[xy] = utils.colorize(desc[xy], "green", bold=True)
+        for hmol_coords in zip(x_h, y_h):
+            desc[hmol_coords] = utils.colorize(desc[hmol_coords], "green", bold=True)
 
         # All polar molecules are cyan
-        for xy in zip(x_p, y_p):
-            desc[xy] = utils.colorize(desc[xy], "cyan")
+        for pmol_coords in zip(x_p, y_p):
+            desc[pmol_coords] = utils.colorize(desc[pmol_coords], "cyan")
 
         # Provide prompt for last action
         if self.last_action is not None:
