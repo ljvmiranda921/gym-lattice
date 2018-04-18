@@ -64,7 +64,7 @@ def test_draw_grid(actions, expected_coords):
     assert np.array_equal(expected, result)
 
 @pytest.mark.parametrize("seq,actions,expected",
-    [('HH', [0], -1), ('HHHH', [0,1,3], -4),
+    [('HH', [0], 0), ('HHHH', [0,1,3], -1),
      ('HP', [0], 0),  ('PPPPH', [0,1,2,3], 0)])
 def test_compute_free_energy(seq, actions, expected):
     """Tests private method _compute_free_energy()"""
@@ -92,8 +92,9 @@ def lattice2d_fixed_env():
 def test_compute_reward_no_penalty(lattice2d_fixed_env):
     """Test reward function with a normal, no-penalty action"""
     for _ in range(3):
-        _, reward, done, _ = lattice2d_fixed_env.step(0)
-        expected_reward = 3 if done else 0
+        _, reward, _, _ = lattice2d_fixed_env.step(0)
+        expected_reward = 0
+
         assert expected_reward == reward
 
 def test_compute_reward_with_collision(lattice2d_fixed_env):
@@ -109,11 +110,13 @@ def test_compute_reward_with_trap():
     from gym_lattice.envs import Lattice2DEnv
     seq = 'H' * 20 # sequence of 20 Hs
     env = Lattice2DEnv(seq)
-    actions = [0, 2, 2, 3, 3, 1, 0] # Define sequence of actions that will trap the agent
+    expected_reward = 3 - (len(seq) * env.trap_penalty) # (12 bonds) - (20 * 0.5)
+    # Define sequence of actions that will trap the agent
+    actions = [0, 2, 2, 3, 3, 1, 0, 1]
     for _ , action in enumerate(actions):
         _, reward, done, _ = env.step(action)
+        print(done, action, expected_reward, reward)
         if done:
-            expected_reward = 12 - (len(seq) * env.trap_penalty) # (12 bonds) - (20 * 0.5)
             assert expected_reward == reward
 
 @pytest.mark.parametrize("action", [5, -2, 'L', 'F', '2'])

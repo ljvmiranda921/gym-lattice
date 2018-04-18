@@ -196,8 +196,8 @@ class Lattice2DEnv(gym.Env):
         next_move = adj_coords[action]
         # Detects for collision or traps in the given coordinate
         idx = len(self.state)
-        if set(adj_coords.values()).issubset(self.state):
-            logger.info('Your agent was trapped! Ending the episode.')
+        if set(adj_coords.values()).issubset(self.state.keys()):
+            logger.warn('Your agent was trapped! Ending the episode.')
             self.trapped += 1
             is_trapped = True
         elif next_move in self.state:
@@ -213,7 +213,7 @@ class Lattice2DEnv(gym.Env):
 
         # Set-up return values
         grid = self._draw_grid(self.state)
-        done = True if len(self.state) == len(self.seq) or is_trapped else False
+        done = True if (len(self.state) == len(self.seq) or is_trapped) else False
         reward = self._compute_reward(is_trapped, collision, done)
         info = {
             'chain_length' : len(self.state),
@@ -371,8 +371,10 @@ class Lattice2DEnv(gym.Env):
         state_reward = self._compute_free_energy(self.state) if done else 0
         collision_penalty = self.collision_penalty if collision else 0
         actual_trap_penalty = -floor(len(self.seq) * self.trap_penalty) if is_trapped else 0
-        # Compute reward at timestep
-        reward = -state_reward + collision_penalty + actual_trap_penalty
+
+        # Compute reward at timestep, the state_reward is originally
+        # negative (Gibbs), so we invert its sign.
+        reward = - state_reward + collision_penalty + actual_trap_penalty
 
         return reward
 
@@ -413,8 +415,8 @@ class Lattice2DEnv(gym.Env):
         # Get the number of consecutive H-pairs in the string,
         # these are not included in computing the energy
         h_consecutive = 0
-        for i in range(1, len(self.seq)):
-            if self.seq[i] == self.seq[i-1]:
+        for i in range(1, len(self.state)):
+            if (self.seq[i] == 'H') and (self.seq[i] == self.seq[i-1]):
                 h_consecutive += 1
 
         # Remove duplicate pairs of pairs and subtract the
