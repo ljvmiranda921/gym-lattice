@@ -49,7 +49,7 @@ Given a sequence of *H* and *P* molecules, find a configuration with the
 highest number of adjacent **H-H** pairs. Your base score is determined by
 the number of **H-H** pairs you can create.
 
-<img src="/assets/pfolding_problem.svg" width="700">
+<img src="/assets/overview.svg" width="700">
 
 
 ### Folding Rules
@@ -64,7 +64,7 @@ protein conformation. For our purposes, here it is in its simplest form:
 3. Assigning a molecule to an occupied space will incur a penalty.
 4. Trapping yourself and running out of moves will give you a heavy deduction.
 
-<img src="/assets/pfolding_rules.svg" width="700">
+<img src="/assets/rules.svg" width="700">
 
 ## Basic Usage
 
