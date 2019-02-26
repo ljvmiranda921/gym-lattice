@@ -29,7 +29,7 @@ Screenshots from `render()`:
 
 ## Installation
 
-This package is only compatible for Python 3.4 and above. To install this
+This package is only compatible with Python 3.4 and above. To install this
 package, please follow the instructions below:
 
 1. Install [OpenAI Gym](https://gym.openai.com/docs/#installation) and its dependencies.
@@ -62,13 +62,13 @@ protein conformation. For our purposes, here it is in its simplest form:
 1. You can only perform the following actions: left, down, up, or right.
 2. You can only put a molecule adjacent to the previous one you've placed.
 3. Assigning a molecule to an occupied space will incur a penalty.
-4. Trapping yourself and running out of moves will give you a heavy deduction.
+4. Trapping yourself and running out of moves will result in a heavy deduction.
 
 <img src="./assets/rules.png" width="700">
 
 ## Basic Usage
 
-Initializing the environment will require the protein sequence of type `str`.
+Initializing the environment requires the protein sequence of type `str`.
 In addition, you can also set the amount of penalty incurred during a
 collision or whenever the agent is trapped.
 
