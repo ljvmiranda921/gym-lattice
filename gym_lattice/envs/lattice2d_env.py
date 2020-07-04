@@ -247,7 +247,8 @@ class Lattice2DEnv(gym.Env):
         """Renders the environment"""
 
         outfile = StringIO() if mode == 'ansi' else sys.stdout
-        desc = self.grid.astype(str)
+        # Flip so highest y-value row is printed first
+        desc = np.flipud(self.grid).astype(str)
 
         # Convert everything to human-readable symbols
         desc[desc == '0'] = '*'
