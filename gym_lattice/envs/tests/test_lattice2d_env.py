@@ -138,3 +138,24 @@ def test_done_signal(lattice2d_env):
     for action in test_actions:
         _, _, done, _ = lattice2d_env.step(action)
     assert done
+
+def test_done_seq_length_one():
+    """Test that the done signal is set when starting with a sequence of length 1"""
+    from gym_lattice.envs import Lattice2DEnv
+    env = Lattice2DEnv("H")
+    assert env.done
+
+def test_trapped():
+    """Test that trapped is set as soon as the agent becomes trapped"""
+    from gym_lattice.envs import Lattice2DEnv
+    env = Lattice2DEnv("PPPPPPPPPP") # has 0 reward
+
+    for action in [0, 0, 2, 2, 3, 3, 1]:
+        _, _, done, info = env.step(action)
+        assert not done
+        assert not info["is_trapped"]
+
+    _, reward, done, info = env.step(0)
+    assert done
+    assert info["is_trapped"]
+    assert reward == -5 # len(seq) * trap_penalty
