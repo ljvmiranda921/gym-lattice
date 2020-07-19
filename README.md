@@ -87,7 +87,7 @@ env = Lattice2DEnv(seq)
 
 for i_episodes in range(5):
     env.reset()
-    while True:
+    while not env.done:
         # Random agent samples from action space
         action = action_space.sample()
         obs, reward, done, info = env.step(action)

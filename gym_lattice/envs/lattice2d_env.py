@@ -114,25 +114,18 @@ class Lattice2DEnv(gym.Env):
                          (trap_penalty, type(trap_penalty)))
             raise
 
-        self.state = OrderedDict({(0, 0) : self.seq[0]})
-        self.actions = []
-        self.collisions = 0
-        self.trapped = 0
-
         # Grid attributes
         self.grid_length = 2 * len(seq) + 1
-        self.midpoint = (len(seq), len(seq))
-        self.grid = np.zeros(shape=(self.grid_length, self.grid_length), dtype=int)
-
-        # Automatically assign first element into grid
-        self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
+        self.midpoint = (len(self.seq), len(self.seq))
 
         # Define action-observation spaces
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-2, high=1,
                                             shape=(self.grid_length, self.grid_length),
                                             dtype=int)
-        self.last_action = None
+
+        # Initialize values
+        self.reset()
 
     def step(self, action):
         """Updates the current chain with the specified action.
@@ -201,11 +194,7 @@ class Lattice2DEnv(gym.Env):
         next_move = adj_coords[action]
         # Detects for collision or traps in the given coordinate
         idx = len(self.state)
-        if set(adj_coords.values()).issubset(self.state.keys()):
-            logger.warn('Your agent was trapped! Ending the episode.')
-            self.trapped += 1
-            is_trapped = True
-        elif next_move in self.state:
+        if next_move in self.state:
             self.collisions += 1
             collision = True
         else:
@@ -216,10 +205,15 @@ class Lattice2DEnv(gym.Env):
                 logger.error('All molecules have been placed! Nothing can be added to the protein chain.')
                 raise
 
+            if set(self._get_adjacent_coords(next_move).values()).issubset(self.state.keys()):
+                logger.warn('Your agent was trapped! Ending the episode.')
+                self.trapped += 1
+                is_trapped = True
+
         # Set-up return values
         grid = self._draw_grid(self.state)
-        done = True if (len(self.state) == len(self.seq) or is_trapped) else False
-        reward = self._compute_reward(is_trapped, collision, done)
+        self.done = True if (len(self.state) == len(self.seq) or is_trapped) else False
+        reward = self._compute_reward(is_trapped, collision)
         info = {
             'chain_length' : len(self.state),
             'seq_length'   : len(self.seq),
@@ -229,7 +223,7 @@ class Lattice2DEnv(gym.Env):
             'state_chain'  : self.state
         }
 
-        return (grid, reward, done, info)
+        return (grid, reward, self.done, info)
 
     def reset(self):
         """Resets the environment"""
@@ -237,10 +231,13 @@ class Lattice2DEnv(gym.Env):
         self.actions = []
         self.collisions = 0
         self.trapped = 0
+        self.done = len(self.seq) == 1
+
         self.grid = np.zeros(shape=(self.grid_length, self.grid_length), dtype=int)
         # Automatically assign first element into grid
         self.grid[self.midpoint] = POLY_TO_INT[self.seq[0]]
 
+        self.last_action = None
         return self.grid
 
     def render(self, mode='human'):
@@ -335,7 +332,7 @@ class Lattice2DEnv(gym.Env):
 
         return np.flipud(self.grid)
 
-    def _compute_reward(self, is_trapped, collision, done):
+    def _compute_reward(self, is_trapped, collision):
         """Computes the reward for a given time step
 
         For every timestep, we compute the reward using the following function:
@@ -364,8 +361,6 @@ class Lattice2DEnv(gym.Env):
         ----------
         is_trapped : bool
             Signal indicating if the agent is trapped.
-        done : bool
-            Done signal
         collision : bool
             Collision signal
 
@@ -374,7 +369,7 @@ class Lattice2DEnv(gym.Env):
         int
             Reward function
         """
-        state_reward = self._compute_free_energy(self.state) if done else 0
+        state_reward = self._compute_free_energy(self.state) if self.done else 0
         collision_penalty = self.collision_penalty if collision else 0
         actual_trap_penalty = -floor(len(self.seq) * self.trap_penalty) if is_trapped else 0
 
