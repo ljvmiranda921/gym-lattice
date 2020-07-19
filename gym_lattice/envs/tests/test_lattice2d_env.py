@@ -6,6 +6,8 @@ import string
 import pytest
 import numpy as np
 
+from gym_lattice.envs import Lattice2DEnv
+
 def generate_sequence(length):
     """Generates a random sequence given a length"""
     possible_chars = 'HhPp'
@@ -19,14 +21,12 @@ def generate_invalid_sequence():
 def test_init_invalid_sequence(sequence):
     """Exception must be raised with invalid input"""
     with pytest.raises((ValueError, AttributeError)):
-        from gym_lattice.envs import Lattice2DEnv
         Lattice2DEnv(sequence)
 
 @pytest.mark.parametrize("penalty", [10, 0, -5.2, 'hello'])
 def test_init_illegal_collision_penalty(penalty):
     """Exception must be raised when illegal penalty is given"""
     with pytest.raises((ValueError, TypeError)):
-        from gym_lattice.envs import Lattice2DEnv
         seq = generate_sequence(10)
         Lattice2DEnv(seq, collision_penalty=penalty)
 
@@ -34,13 +34,11 @@ def test_init_illegal_collision_penalty(penalty):
 def test_init_illegal_trap_penalty(penalty):
     """Exception must be raised when illegal penalty is given"""
     with pytest.raises((ValueError, TypeError)):
-        from gym_lattice.envs import Lattice2DEnv
         seq = generate_sequence(10)
         Lattice2DEnv(seq, trap_penalty=penalty)
 
 def test_get_adjacent_coords():
     """Tests private method _get_adjacent_coords()"""
-    from gym_lattice.envs import Lattice2DEnv
     seq = generate_sequence(10)
     env = Lattice2DEnv(seq)
     test_coords = (0,0)
@@ -54,7 +52,6 @@ def test_get_adjacent_coords():
     [(0, (2,1)), (1, (3,2)), (2, (1,2)), (3, (2,3))])
 def test_draw_grid(actions, expected_coords):
     """Tests private method _draw_grid()"""
-    from gym_lattice.envs import Lattice2DEnv
     seq = 'HH'
     env = Lattice2DEnv(seq)
     result = env._draw_grid(env.state)
@@ -68,7 +65,6 @@ def test_draw_grid(actions, expected_coords):
      ('HP', [0], 0),  ('PPPPH', [0,1,2,3], 0)])
 def test_compute_free_energy(seq, actions, expected):
     """Tests private method _compute_free_energy()"""
-    from gym_lattice.envs import Lattice2DEnv
     env = Lattice2DEnv(seq)
     for action in actions:
         env.step(action)
@@ -78,14 +74,12 @@ def test_compute_free_energy(seq, actions, expected):
 @pytest.fixture
 def lattice2d_env():
     """Lattice2DEnv with a random sequence"""
-    from gym_lattice.envs import Lattice2DEnv
     seq = generate_sequence(10)
     return Lattice2DEnv(seq)
 
 @pytest.fixture
 def lattice2d_fixed_env():
     """Lattice2DEnv with a fixed sequence"""
-    from gym_lattice.envs import Lattice2DEnv
     seq = 'HHHH'
     return Lattice2DEnv(seq)
 
@@ -107,7 +101,6 @@ def test_compute_reward_with_collision(lattice2d_fixed_env):
 
 def test_compute_reward_with_trap():
     """Test reward function when agent is trapped"""
-    from gym_lattice.envs import Lattice2DEnv
     seq = 'H' * 20 # sequence of 20 Hs
     env = Lattice2DEnv(seq)
     expected_reward = 3 - (len(seq) * env.trap_penalty) # (12 bonds) - (20 * 0.5)
@@ -141,13 +134,11 @@ def test_done_signal(lattice2d_env):
 
 def test_done_seq_length_one():
     """Test that the done signal is set when starting with a sequence of length 1"""
-    from gym_lattice.envs import Lattice2DEnv
     env = Lattice2DEnv("H")
     assert env.done
 
 def test_trapped():
     """Test that trapped is set as soon as the agent becomes trapped"""
-    from gym_lattice.envs import Lattice2DEnv
     env = Lattice2DEnv("PPPPPPPPPP") # has 0 reward
 
     for action in [0, 0, 2, 2, 3, 3, 1]:
