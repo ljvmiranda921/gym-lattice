@@ -2,7 +2,7 @@ from setuptools import setup
 
 requirements = [
       'gym==0.10.4',
-      'numpy==1.14.2'
+      'numpy==1.22.0'
 ]
 
 dev_requirements = [
